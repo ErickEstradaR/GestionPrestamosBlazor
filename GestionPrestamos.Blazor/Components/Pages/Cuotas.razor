@@ -1,0 +1,75 @@
+@using Microsoft.EntityFrameworkCore.Query.Internal
+<div class="border border-success p-3 mt-3">
+    <h5>Cuotas</h5>
+    <div class="col-auto input-group align-items-center">
+        <label class="col-form-label input-group-text">Cantidad de cuotas</label>
+        <InputNumber class="form-control" id="quantity-input" @bind-Value="CuotasNo"></InputNumber>
+        <button type="button" class="btn btn-outline-success" @onclick="Calcular">Calcular</button>
+    </div>
+    <hr/>
+    <table class="table table-light">
+        <thead class="table table-striped">
+            <tr class="text-center">
+                <th>Cuota</th>
+                <th>Fecha de pago</th>
+                <th>Monto</th>
+                <th>Remover</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach(var cuota in cuotas)
+        {
+            <tr>
+                <td>@cuota.CuotaNo</td>
+                <td>@cuota.Fecha.ToShortDateString()</td>
+                <td>@cuota.Valor.ToString("N2")</td>
+                <td>
+                    <button type="button" class="btn btn-outline-danger bi bi-trash"></button>
+                </td>
+            </tr>
+            
+        }
+        
+        </tbody>
+    </table>
+    <hr />
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<double> prueba { get; set; }
+    [Parameter]
+    public double Valor { get; set; }
+    [Parameter]
+    public DateTime Fecha { get; set; }
+
+    public List <PrestamosDetalle> cuotas { get; set; } = new List <PrestamosDetalle>();
+    
+    public int CuotasNo { get; set; }
+    
+    async Task CuotaTask ()
+    {
+        await prueba.InvokeAsync(Valor);
+    }
+
+    async Task Calcular()
+    {
+        cuotas.Clear();
+        DateTime fechaInicial = DateTime.Today;
+
+        if (CuotasNo <= 0) return;
+        double montoPorCuota = Valor / CuotasNo;
+
+        for (int i = 1; i <= CuotasNo; i++)
+        {
+            var cuota = new PrestamosDetalle
+            {
+                CuotaNo = i,
+                Fecha = fechaInicial.AddMonths(i),
+                Valor = montoPorCuota
+            };
+            cuotas.Add(cuota);
+        }
+        
+    }
+}
