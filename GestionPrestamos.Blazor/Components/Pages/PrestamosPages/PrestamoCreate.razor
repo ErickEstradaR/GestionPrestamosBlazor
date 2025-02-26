@@ -43,8 +43,13 @@
                     <InputNumber class="form-control" @bind-Value="Prestamo.Monto"></InputNumber>
                     <ValidationMessage For="(() => Prestamo.Monto)" />
                 </div>
+                
+               @**@
+                <Cuotas Valor="Prestamo.Monto"
+                        ></Cuotas>
+                @**@
+                
             </div>
-
             @*footer*@
             <div class="card-footer text-center mt-2">
                 <a href="/Prestamo/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
@@ -56,7 +61,7 @@
 @Mensaje
 
 @code {
-    public Prestamos Prestamo { get; set; } = new Prestamos();
+    public Prestamos Prestamo = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
 
@@ -78,4 +83,8 @@
             toastService.ShowError("No se pudo guardar correctamente");
         }
     }
+
+   
+
+
 }
