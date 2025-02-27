@@ -45,8 +45,7 @@
                 </div>
                 
                @**@
-                <Cuotas Valor="Prestamo.Monto"
-                        ></Cuotas>
+                <Cuotas Valor="Prestamo.Monto" OnCuotasCalculated="HandleCuotasCalculated" />
                 @**@
                 
             </div>
@@ -64,14 +63,18 @@
     public Prestamos Prestamo = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
+    public List<PrestamosDetalle> CuotasGeneradas { get; set; } = new List<PrestamosDetalle>();
 
     protected override async Task OnInitializedAsync()
     {
         ListaDeudores = await deudoresService.Listar(d => d.DeudorId > 0);
     }
+    
+   
 
     public async Task Guardar()
     {
+      
         var creado = await prestamosService.Guardar(Prestamo);
 
         if (creado)
@@ -82,6 +85,11 @@
         {
             toastService.ShowError("No se pudo guardar correctamente");
         }
+    }
+    
+    private void HandleCuotasCalculated(List<PrestamosDetalle> cuotasCalculadas)
+    {
+      
     }
 
    
