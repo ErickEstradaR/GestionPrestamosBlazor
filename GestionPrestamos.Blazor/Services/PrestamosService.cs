@@ -18,6 +18,10 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         contexto.Prestamos.Add(prestamo);
+        foreach (var dPrestamo in prestamo.PrestamosDetalle)
+        {
+            contexto.PrestamosDetalle.Add(dPrestamo);
+        }
         return await contexto.SaveChangesAsync() > 0;
     }
 
