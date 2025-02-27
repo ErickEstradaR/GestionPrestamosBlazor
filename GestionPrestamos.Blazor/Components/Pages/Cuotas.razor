@@ -27,9 +27,7 @@
                     <button type="button" class="btn btn-outline-danger bi bi-trash"></button>
                 </td>
             </tr>
-            
         }
-        
         </tbody>
     </table>
     <hr />
@@ -37,20 +35,17 @@
 
 @code {
     [Parameter]
-    public EventCallback<double> prueba { get; set; }
+    public EventCallback<List<PrestamosDetalle>> OnCuotasCalculated { get; set; } 
+    
     [Parameter]
     public double Valor { get; set; }
+    
     [Parameter]
     public DateTime Fecha { get; set; }
 
-    public List <PrestamosDetalle> cuotas { get; set; } = new List <PrestamosDetalle>();
+    public List<PrestamosDetalle> cuotas { get; set; } = new List<PrestamosDetalle>();
     
     public int CuotasNo { get; set; }
-    
-    async Task CuotaTask ()
-    {
-        await prueba.InvokeAsync(Valor);
-    }
 
     async Task Calcular()
     {
@@ -70,6 +65,7 @@
             };
             cuotas.Add(cuota);
         }
-        
+
+        await OnCuotasCalculated.InvokeAsync(cuotas);
     }
 }
