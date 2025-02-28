@@ -16,6 +16,11 @@ public partial class PrestamosDetalle
 
     public double Valor { get; set; } 
     
+    // Campo para rastrear el balance pendiente de la cuota
+    public double Balance { get; set; }
+    
+    // Campo para rastrear si la cuota está pagada
+    public bool Pagada { get; set; }
     
     [ForeignKey("PrestamoId")]
     [InverseProperty("PrestamosDetalle")]

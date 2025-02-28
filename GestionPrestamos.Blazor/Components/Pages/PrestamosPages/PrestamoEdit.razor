@@ -63,6 +63,7 @@
     public Prestamos Prestamo { get; set; } = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
+    public List<PrestamosDetalle> cuotas { get; set; } = new List<PrestamosDetalle>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,9 +72,9 @@
 
     }
 
-    public async Task Modificar()
+   public async Task Modificar()
     {
-        var creado = await prestamosService.Guardar(Prestamo);
+      var creado = await prestamosService.Guardar(Prestamo);
 
         if (creado)
         {
@@ -83,7 +84,7 @@
         {
             toastService.ShowError("No se ha podido modificar correctamente");
         }
-    }
+    } 
 
     private async Task Eliminar(){
         var eliminado = await prestamosService.Eliminar(Prestamo.PrestamoId);

@@ -63,7 +63,6 @@
     public Prestamos Prestamo = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
-    public List<PrestamosDetalle> CuotasGeneradas { get; set; } = new List<PrestamosDetalle>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -89,10 +88,10 @@
     
     private void HandleCuotasCalculated(List<PrestamosDetalle> cuotasCalculadas)
     {
-      
+        foreach (var cuota in cuotasCalculadas)
+        {
+            Prestamo.PrestamosDetalle.Add(cuota);
+        }
     }
-
-   
-
-
+    
 }

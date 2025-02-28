@@ -130,11 +130,17 @@
 
     private async Task HandlePrestamoSelected((Prestamos prestamo, double valor) selection)
     {
+        if (selection.valor > selection.prestamo.Balance)
+        {
+            toastService.ShowError($"No puedes cobrar más del saldo disponible ({selection.prestamo.Balance}) para el préstamo {selection.prestamo.PrestamoId}.");
+            return;
+        }
+
         var detalle = new CobrosDetalle
-            {
-                PrestamoId = selection.prestamo.PrestamoId,
-                ValorCobrado = selection.valor
-            };
+        {
+            PrestamoId = selection.prestamo.PrestamoId,
+            ValorCobrado = selection.valor
+        };
 
         Cobro.CobrosDetalle.Add(detalle);
         Cobro.Monto = Cobro.CobrosDetalle.Sum(d => d.ValorCobrado);
@@ -143,7 +149,9 @@
         await Task.CompletedTask;
     }
 
+
     public async Task Guardar()
+    
     {
         var paso = await cobroService.Guardar(Cobro);
 
@@ -153,7 +161,7 @@
         }
         else
         {
-            toastService.ShowError("No se pudo guardar correctamente");
+            Console.WriteLine("No se pudo guardar correctamente");
         }
     }
 
@@ -168,34 +176,24 @@
         Cobro.CobrosDetalle.Clear();
         if (ValorAplicar > 0)
         {
-
-            var prestamosPendientes = await prestamosService
-                .GetPrestamosPendientes(Cobro.DeudorId);
+            var prestamosPendientes = await prestamosService.GetPrestamosPendientes(Cobro.DeudorId);
             foreach (var prestamo in prestamosPendientes)
             {
-                double valorCobrado = 0;
-                if (prestamo.Balance < ValorAplicar)
-                    valorCobrado = prestamo.Balance;
-                else
-                    valorCobrado = ValorAplicar;
-
+                double valorCobrado = Math.Min(ValorAplicar, prestamo.Balance); // Solo toma lo disponible
                 ValorAplicar -= valorCobrado;
 
-                Cobro.CobrosDetalle.Add(
-                    new CobrosDetalle()
-                        {
-                            PrestamoId = prestamo.PrestamoId,
-                            ValorCobrado = valorCobrado
-                        }
-                );
+                if (valorCobrado > 0)
+                {
+                    Cobro.CobrosDetalle.Add(new CobrosDetalle
+                    {
+                        PrestamoId = prestamo.PrestamoId,
+                        ValorCobrado = valorCobrado
+                    });
+                }
             }
-
-
         }
-
-
-
     }
+
 
 }
 

@@ -18,10 +18,6 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         contexto.Prestamos.Add(prestamo);
-        foreach (var dPrestamo in prestamo.PrestamosDetalle)
-        {
-            contexto.PrestamosDetalle.Add(dPrestamo);
-        }
         return await contexto.SaveChangesAsync() > 0;
     }
 
@@ -33,7 +29,7 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
             .SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> Guardar(Prestamos prestamo)
+    public async Task<bool> Guardar(Prestamos prestamo )
     {
         prestamo.Balance = prestamo.Monto;
         if (!await Existe(prestamo.PrestamoId))
@@ -46,12 +42,15 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
         }
     }
 
-    public async Task<Prestamos> Buscar(int prestamoId)
+    public async Task<Prestamos?> Buscar(int prestamoId)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Prestamos.Include(d => d.Deudor)
+        return await contexto.Prestamos
+            .Include(d => d.Deudor)
+            .Where(p => p.Balance > 0) // Solo devuelve préstamos con balance pendiente
             .FirstOrDefaultAsync(p => p.PrestamoId == prestamoId);
     }
+
 
     public async Task<bool> Eliminar(int prestamoId)
     {
