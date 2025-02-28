@@ -32,8 +32,8 @@ public class CobrosService(IDbContextFactory<Contexto> DbFactory)
                 prestamo.Balance -= item.ValorCobrado;
             else
                 prestamo.Balance += item.ValorCobrado;
-
         }
+        await contexto.SaveChangesAsync();
     }
 
     private async Task<bool> Modificar(Cobros cobro)
