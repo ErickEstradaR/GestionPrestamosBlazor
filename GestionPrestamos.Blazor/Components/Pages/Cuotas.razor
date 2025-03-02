@@ -24,7 +24,8 @@
                 <td>@cuota.Fecha.ToShortDateString()</td>
                 <td>@cuota.Valor.ToString("N2")</td>
                 <td>
-                    <button type="button" class="btn btn-outline-danger bi bi-trash"></button>
+                    <button type="button" class="btn btn-outline-danger bi bi-trash" @onclick="() => EliminarCuota(cuota)"
+                    ></button>
                 </td>
             </tr>
         }
@@ -35,24 +36,37 @@
 
 @code {
     [Parameter]
-    public EventCallback<List<PrestamosDetalle>> OnCuotasCalculated { get; set; } 
-    
+    public List<PrestamosDetalle> CuotasExistentes { get; set; } = new List<PrestamosDetalle>();
+
+    [Parameter]
+    public EventCallback<List<PrestamosDetalle>> OnCuotasCalculated { get; set; }
+
     [Parameter]
     public double Valor { get; set; }
-    
-    [Parameter]
-    public DateTime Fecha { get; set; }
 
     public List<PrestamosDetalle> cuotas { get; set; } = new List<PrestamosDetalle>();
-    
+
     public int CuotasNo { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (CuotasExistentes != null && CuotasExistentes.Any())
+        {
+            cuotas = new List<PrestamosDetalle>(CuotasExistentes);
+        }
+        else if (cuotas.Count == 0 && Valor > 0 && CuotasNo > 0)
+        {
+            Calcular();
+        }
+    }
 
     async Task Calcular()
     {
         cuotas.Clear();
         DateTime fechaInicial = DateTime.Today;
 
-        if (CuotasNo <= 0) return;
+        if (CuotasNo <= 0 || Valor <= 0) return;
+
         double montoPorCuota = Valor / CuotasNo;
 
         for (int i = 1; i <= CuotasNo; i++)
@@ -61,10 +75,22 @@
             {
                 CuotaNo = i,
                 Fecha = fechaInicial.AddMonths(i),
-                Valor = montoPorCuota
+                Valor = montoPorCuota,
+                Balance = montoPorCuota
             };
             cuotas.Add(cuota);
         }
+
         await OnCuotasCalculated.InvokeAsync(cuotas);
+    }
+
+    void EliminarCuota(PrestamosDetalle cuota)
+    {
+        cuotas.Remove(cuota);  
+        CuotasNo--;  
+        if (CuotasNo < 0) CuotasNo = 0;  
+
+        
+        OnCuotasCalculated.InvokeAsync(cuotas);
     }
 }
