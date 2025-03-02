@@ -96,6 +96,7 @@
                         </div>
                     </div>
                 </div>
+                
             </div>
 
             @* footer *@
@@ -135,6 +136,7 @@
             toastService.ShowError($"No puedes cobrar más del saldo disponible ({selection.prestamo.Balance}) para el préstamo {selection.prestamo.PrestamoId}.");
             return;
         }
+        
 
         var detalle = new CobrosDetalle
         {
@@ -168,7 +170,7 @@
     public void RemoverDetalle(CobrosDetalle detalle)
     {
         Cobro.CobrosDetalle.Remove(detalle);
-        DetalleSeleccionado = detalle;
+        Cobro.Monto = Cobro.CobrosDetalle.Sum(d => d.ValorCobrado);
     }
 
     private async Task AplicarValor()
