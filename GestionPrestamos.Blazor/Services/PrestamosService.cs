@@ -24,13 +24,24 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
     private async Task<bool> Modificar(Prestamos prestamo)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        contexto.Update(prestamo);
-        return await contexto
-            .SaveChangesAsync() > 0;
+        var cuotasExistentes = contexto.PrestamosDetalle.Where(p => p.PrestamoId == prestamo.PrestamoId).ToList();
+        contexto.PrestamosDetalle.RemoveRange(cuotasExistentes);
+        contexto.Prestamos.Update(prestamo);
+        
+        var resultado = await contexto.SaveChangesAsync() > 0;
+
+        return resultado;
     }
 
+
     public async Task<bool> Guardar(Prestamos prestamo )
+    
     {
+        
+        if (prestamo.PrestamosDetalle == null || !prestamo.PrestamosDetalle.Any())
+        {
+            return false;  
+        }
         prestamo.Balance = prestamo.Monto;
         if (!await Existe(prestamo.PrestamoId))
         {
@@ -86,4 +97,48 @@ public class PrestamosService(IDbContextFactory<Contexto> DbFactory)
             Include(p => p.Deudor)
             .FirstOrDefaultAsync(p => p.DeudorId == id);
     }
+    
+    public async Task<List<PrestamosDetalle>> ObtenerCuotas(int prestamoId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.PrestamosDetalle
+            .Where(c => c.PrestamoId == prestamoId)
+            .OrderBy(c => c.CuotaNo)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
+/*public async Task<bool> ActualizarCuotas(int prestamoId, List<PrestamosDetalle> nuevasCuotas)
+{
+    await using var contexto = await DbFactory.CreateDbContextAsync();
+    var cuotasExistentes = await contexto.PrestamosDetalle
+        .Where(c => c.PrestamoId == prestamoId)
+        .ToListAsync();
+    
+        contexto.PrestamosDetalle.RemoveRange(cuotasExistentes);
+    
+    foreach (var cuota in nuevasCuotas)
+    {
+        var cuotaExistente = cuotasExistentes.FirstOrDefault(c => c.CuotaNo == cuota.CuotaNo);
+
+        if (cuotaExistente == null)
+        {
+         
+            contexto.PrestamosDetalle.Add(cuota);
+        }
+        else
+        {
+         
+            cuotaExistente.Fecha = cuota.Fecha;
+            cuotaExistente.Valor = cuota.Valor;
+            cuotaExistente.Balance = cuota.Balance;
+            contexto.PrestamosDetalle.Update(cuotaExistente);
+        }
+    }
+    
+    return await contexto.SaveChangesAsync() > 0;
+    
+}*/
+
+
 }
