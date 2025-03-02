@@ -27,7 +27,12 @@ public class Contexto : DbContext
                 {
                     DeudorId = 2,
                     Nombres = "Maria Perez",
-                }
+                },
+                new()
+                {
+                DeudorId = 3,
+                Nombres = "Erick Estrada",
+            }
             }
         );
         base.OnModelCreating(modelBuilder);
