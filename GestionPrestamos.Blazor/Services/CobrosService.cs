@@ -22,19 +22,54 @@ public class CobrosService(IDbContextFactory<Contexto> DbFactory)
         return await contexto.SaveChangesAsync() > 0;
     }
 
-    private async Task AfectarPrestamos(CobrosDetalle[] detalle, TipoOperacion tipoOperacion)
+private async Task AfectarPrestamos(CobrosDetalle[] detalle, TipoOperacion tipoOperacion)
+{
+    await using var contexto = await DbFactory.CreateDbContextAsync();
+
+    foreach (var item in detalle)
     {
-        await using var contexto = await DbFactory.CreateDbContextAsync();
-        foreach (var item in detalle)
+        var prestamo = await contexto.Prestamos
+            .Include(p => p.PrestamosDetalle)  // Incluir las cuotas en el contexto
+            .SingleAsync(p => p.PrestamoId == item.PrestamoId);
+
+        double sobrante = item.ValorCobrado;
+        
+        if (tipoOperacion == TipoOperacion.Resta)
+            prestamo.Balance -= sobrante; 
+        else
+            prestamo.Balance += sobrante; 
+
+
+        foreach (var cuota in prestamo.PrestamosDetalle.OrderBy(c => c.CuotaNo))
         {
-            var prestamo = await contexto.Prestamos.SingleAsync(p => p.PrestamoId == item.PrestamoId);
-            if (tipoOperacion == TipoOperacion.Resta)
-                prestamo.Balance -= item.ValorCobrado;
-            else
-                prestamo.Balance += item.ValorCobrado;
+            if (sobrante <= 0)
+                break; 
+
+            // Si la cuota no está completamente pagada
+            if (!cuota.Pagada && cuota.Balance > 0)
+            {
+                
+                double diferencia = cuota.Balance;
+
+                if (sobrante >= diferencia)
+                {
+                    cuota.Pagada = true; 
+                    cuota.Balance = 0; 
+                    sobrante -= diferencia;
+                }
+                else
+                {
+                    cuota.Pagada = false; 
+                    cuota.Balance -= sobrante; 
+                    sobrante = 0; 
+                }
+                contexto.PrestamosDetalle.Update(cuota);
+            }
         }
         await contexto.SaveChangesAsync();
     }
+}
+
 
     private async Task<bool> Modificar(Cobros cobro)
     {
