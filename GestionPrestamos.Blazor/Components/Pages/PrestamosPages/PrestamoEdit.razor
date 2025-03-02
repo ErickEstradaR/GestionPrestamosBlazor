@@ -11,6 +11,13 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
 
+    @if (showError)
+    {
+    <div class="alert alert-danger mt-3" role="alert">
+        @MensajeError
+    </div>
+    }
+    
     <div class="container">
         <div class="card shadow-lg">
             <div class="card-header text-center">
@@ -21,12 +28,12 @@
                 @*Deudor*@
                 <div class="mb-3">
                     <label class="form-label"><strong>Deudor</strong></label>
-                        <InputSelect class="form-control" @bind-Value="Prestamo.DeudorId">
-                            <option value="" selected disabled>Elija una opci&oacute;n</option>
-                            @foreach (var deudor in ListaDeudores)
-                            {
-                                <option value="@deudor.DeudorId">@deudor.Nombres</option>
-                            }
+                    <InputSelect class="form-control" @bind-Value="Prestamo.DeudorId">
+                        <option value="" selected disabled>Elija una opci&oacute;n</option>
+                        @foreach (var deudor in ListaDeudores)
+                        {
+                            <option value="@deudor.DeudorId">@deudor.Nombres</option>
+                        }
                     </InputSelect>
                     <ValidationMessage For="(() => Prestamo.Deudor)" />
                 </div>
@@ -43,6 +50,12 @@
                     <ValidationMessage For="(() => Prestamo.Monto)" />
                 </div>
             </div>
+
+            <Cuotas
+                Valor="@Prestamo.Monto"
+                CuotasExistentes="@cuotas"
+                OnCuotasCalculated="HandleCuotasCalculated"
+            />
 
             @*footer*@
             <div class="card-footer text-center mt-2">
@@ -64,27 +77,31 @@
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
     public List<PrestamosDetalle> cuotas { get; set; } = new List<PrestamosDetalle>();
+    private bool showError = false;
+    private string MensajeError { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         Prestamo = await prestamosService.Buscar(PrestamoId);
         ListaDeudores = await deudoresService.Listar(d => d.DeudorId > 0);
-
+        cuotas = await prestamosService.ObtenerCuotas(PrestamoId);
     }
 
-   public async Task Modificar()
+    private async Task Modificar()
     {
-      var creado = await prestamosService.Guardar(Prestamo);
-
+        var creado = await prestamosService.Guardar(Prestamo);
         if (creado)
         {
-            toastService.ShowSuccess( "Se ha modificado correctamente");
+                navigationManager.NavigateTo("Prestamo/Index");
         }
         else
         {
-            toastService.ShowError("No se ha podido modificar correctamente");
+            MensajeError = "No se ha podido modificar el prestamo";
+            showError = true;
         }
-    } 
+    }
+
+
 
     private async Task Eliminar(){
         var eliminado = await prestamosService.Eliminar(Prestamo.PrestamoId);
@@ -95,7 +112,24 @@
         }
         else
         {
-            toastService.ShowError("No se ha podido eliminar correctamente");
+            MensajeError = "No se ha podido eliminar el prestamo";
+            showError = true;
         }
     }
+    
+    private async Task HandleCuotasCalculated(List<PrestamosDetalle> detalles)
+    {
+        if (detalles == null || detalles.Count == 0)
+            return;
+
+        cuotas.Clear();
+        Prestamo.PrestamosDetalle.Clear();
+        cuotas.AddRange(detalles);
+        Prestamo.PrestamosDetalle = cuotas.ToList();
+        StateHasChanged();
+
+        await Task.CompletedTask;
+    }
+
+
 }

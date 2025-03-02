@@ -9,8 +9,15 @@
 <PageTitle>Create</PageTitle>
 <EditForm Model="Prestamo" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
-    
 
+    
+    @if (showError)
+    {
+    <div class="alert alert-danger mt-3" role="alert">
+        @MensajeError
+    </div>
+    }
+    
     <div class="container">
         <div class="card shadow-lg">
             <div class="card-header text-center">
@@ -63,6 +70,8 @@
     public Prestamos Prestamo = new Prestamos();
     public string Mensaje { get; set; } = string.Empty;
     public List<Deudores> ListaDeudores { get; set; } = new List<Deudores>();
+    private bool showError;
+    private string MensajeError { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,7 +91,8 @@
         }
         else
         {
-            toastService.ShowError("No se pudo guardar correctamente");
+            MensajeError = "No se ha podido guardar el prestamo";
+            showError = true;
         }
     }
     
